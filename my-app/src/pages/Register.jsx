@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, Building2, GraduationCap } from 'lucide-react';
-import { createPageUrl } from "C:/Users/USER/sponza/project/my-app/src/utils";
-import { dummyUsers } from "C:/Users/USER/sponza/project/my-app/src/components/data/dummyData";
-import logoSrc from 'C:/Users/USER/sponza/project/my-app/public/img/a-sleek-modern-logo-design-featuring-the_goDenOD7TPS-KtuXM3BUnA_RzVYVD7bSjiL0zKDsLJ0uw-Photoroom.png';
+import { createPageUrl } from '../utils';
+import { api, setAuthToken } from '../api/client';
+import logoSrc from '/img/a-sleek-modern-logo-design-featuring-the_goDenOD7TPS-KtuXM3BUnA_RzVYVD7bSjiL0zKDsLJ0uw-Photoroom.png';
 
 const THEME = {
     start: "#004e92",
@@ -234,75 +234,25 @@ export default function Register() {
 
     const handleNext = () => { if (validateStep1()) setStep(2); };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validateStep2()) return;
         setLoading(true);
-        setTimeout(() => {
-            const baseUser = {
-                id: Date.now(),
-                email: formData.email,
-                name: formData.name,
-                phone: formData.phone,
-                role,
-                ...formData,
-            };
-
-            // ✅ Save full user to sponza_registered (used at login)
-            localStorage.setItem('sponza_registered', JSON.stringify(baseUser));
-
-            if (role === 'college') {
-                // ✅ Pre-populate CollegeSettings profile tab (sponza_auth)
-                localStorage.setItem('sponza_auth', JSON.stringify({
-                    ...baseUser,
-                    designation: '',
-                }));
-
-                // ✅ Pre-populate CollegeSettings organization tab
-                localStorage.setItem('sponza_college_profile', JSON.stringify({
-                    basicForm: {
-                        collegeName:     formData.collegeName  || '',
-                        university:      '',
-                        establishedYear: '',
-                        collegeType:     formData.collegeType  || 'Private',
-                        naacGrade:       'A',
-                        aisheCode:       formData.aisheCode    || '',
-                    },
-                    contactForm: {
-                        officialEmail: formData.email    || '',
-                        phone:         formData.phone    || '',
-                        website:       formData.website  || '',
-                        address:       '',
-                        city:          formData.location ? formData.location.split(',')[0]?.trim() : '',
-                        state:         formData.location ? formData.location.split(',')[1]?.trim() : '',
-                        pincode:       '',
-                    },
-                    aboutForm: {
-                        description:     '',
-                        studentStrength: '',
-                    },
-                }));
-
-            } else {
-                // ✅ Pre-populate SponsorSettings profile tab (sponza_auth)
-                localStorage.setItem('sponza_auth', JSON.stringify({
-                    ...baseUser,
-                    designation:   '',
-                    whatsapp:      '',
-                    officialEmail: formData.email || '',
-                    companyName:   formData.companyName    || '',
-                    companyWebsite: formData.companyWebsite || '',
-                }));
-            }
-
+        
+        try {
+            const endpoint = role === 'college' ? 'organizationRegister' : 'sponsorRegister';
+            await api.auth[endpoint](formData.email, formData.password, formData.name);
+            
             setLoading(false);
             setRegistrationDone(true);
 
-            // ✅ Redirect to SignIn after 2 seconds
             setTimeout(() => {
                 navigate(createPageUrl('SignIn'));
             }, 2000);
-        }, 1500);
+        } catch (err) {
+            setLoading(false);
+            setErrors({ submit: err.message || 'Registration failed. Please try again.' });
+        }
     };
 
     const collegeTypes = ['University', 'College', 'Institute', 'Academy', 'School'];

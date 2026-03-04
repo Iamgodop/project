@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { GraduationCap, Building2, Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { createPageUrl } from 'C:/Users/USER/sponza/project/my-app/src/utils';
-import { dummyUsers } from 'C:/Users/USER/sponza/project/my-app/src/components/data/dummyData';
-import logoSrc from 'C:/Users/USER/sponza/project/my-app/public/img/a-sleek-modern-logo-design-featuring-the_goDenOD7TPS-KtuXM3BUnA_RzVYVD7bSjiL0zKDsLJ0uw-Photoroom.png';
+import { createPageUrl } from '../utils';
+import { setAuthToken } from '../api/client';
+import logoSrc from '/img/a-sleek-modern-logo-design-featuring-the_goDenOD7TPS-KtuXM3BUnA_RzVYVD7bSjiL0zKDsLJ0uw-Photoroom.png';
 
 const THEME = {
     start: "#004e92",
@@ -92,19 +92,27 @@ export default function SignIn() {
         { id: 'sponsor', label: 'Sponsor', icon: Building2, desc: 'Company' },
     ];
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
         setError('');
         setLoading(true);
-        setTimeout(() => {
-            const user = dummyUsers[role];
-            if (user) {
-                localStorage.setItem('sponza_auth', JSON.stringify({ ...user, role }));
+        
+        try {
+            const endpoint = role === 'college' ? 'organizationLogin' : 'sponsorLogin';
+            const { api } = await import('../api/client');
+            const response = await api.auth[endpoint](email, password);
+            
+            if (response.token) {
+                setAuthToken(response.token);
+                localStorage.setItem('user_role', role);
                 if (role === 'college') navigate(createPageUrl('CollegeDashboard'));
-                else if (role === 'sponsor') navigate(createPageUrl('SponsorDashboard'));
+                else navigate(createPageUrl('SponsorDashboard'));
             }
+        } catch (err) {
+            setError(err.message || 'Login failed. Please try again.');
+        } finally {
             setLoading(false);
-        }, 1000);
+        }
     };
 
     return (
