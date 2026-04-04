@@ -264,6 +264,9 @@ export default function Home() {
 
     const handleLogout = () => {
         localStorage.removeItem('sponza_auth');
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('base44_access_token');
+        localStorage.removeItem('user_role');
         setIsAuthenticated(false);
         setUserRole(null);
     };

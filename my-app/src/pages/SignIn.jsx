@@ -104,7 +104,13 @@ export default function SignIn() {
             
             if (response.token) {
                 setAuthToken(response.token);
+                localStorage.setItem('base44_access_token', response.token);
                 localStorage.setItem('user_role', role);
+                localStorage.setItem('sponza_auth', JSON.stringify({ 
+                    email, 
+                    role, 
+                    token: response.token 
+                }));
                 if (role === 'college') navigate(createPageUrl('CollegeDashboard'));
                 else navigate(createPageUrl('SponsorDashboard'));
             }

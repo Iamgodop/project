@@ -79,6 +79,9 @@ export default function SponsorDashboard() {
 
     const handleLogout = () => {
         localStorage.removeItem('sponza_auth');
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('base44_access_token');
+        localStorage.removeItem('user_role');
         navigate(createPageUrl('Home'));
     };
 

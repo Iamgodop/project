@@ -1,7 +1,7 @@
 const API_BASE_URL = 'http://localhost:2007';
 
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('auth_token');
+  const token = localStorage.getItem('auth_token') || localStorage.getItem('base44_access_token');
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
@@ -169,9 +169,12 @@ export const setAuthToken = (token) => {
 };
 
 export const getAuthToken = () => {
-  return localStorage.getItem('auth_token');
+  return localStorage.getItem('auth_token') || localStorage.getItem('base44_access_token');
 };
 
 export const clearAuthToken = () => {
   localStorage.removeItem('auth_token');
+  localStorage.removeItem('base44_access_token');
+  localStorage.removeItem('sponza_auth');
+  localStorage.removeItem('user_role');
 };

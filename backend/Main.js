@@ -1,4 +1,5 @@
-const express = require('express'); // Express.js for backend
+const express = require('express'); // Express.js for backend ==> Node.js 
+// Express.js is an extension of Node.js 
 const sqlite3 = require('sqlite3').verbose(); // Sqlite3 for database
 const bc = require('bcrypt'); // Hashing for passwords
 const jwt = require('jsonwebtoken'); // JWT for tokens and sessions
@@ -15,16 +16,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 app.use(helmet());
-const port = 2007
-
-`HTTP Codes:
-404: NOT Found
-200: Success
-401: Unauthorized
-402: Payment Required
-403: Invalid Access
-500: Internal Server Error
-`
+const port = 2007;
 
 const authenticateToken = (req, res, next) => { // Middleware for authentication
   const authHeader = req.headers['authorization'];
@@ -79,24 +71,24 @@ const getAllRows = (sql, params = []) => {
   });
 };
 
-app.post('/Organization/Login', async (req, res) => {
+app.post('/Organization/Login', async (req, res) => { // localhost:2007/Organization/Login
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body; => // { email: bhaskae@gmail.com, password: Bhaskar}
     const sql = "SELECT * FROM User WHERE Email = ? AND UType = 'ORG'";
 
-    const row = await getRow(sql, [email]);
+    const row = await getRow(sql, [email]); // => { ID: afjhwib-78uw-y8v, Email: email, Password: 87t87r598yt75ebg, UType: ORG }
 
-    if (!row) {
+    if (!row) { // => {} => null 
       res.status(404).json({message: 'User Not Found!'});
     } else {
-      const match = await bc.compare(password, row.Password);
+      const match = await bc.compare(password, row.Password);  // bhaskar -> hashing -> hashed string -> compare with existing hashed string
 
       if (!match) {
-        res.status(401).json({message: 'Invalid Creds!'});
+        res.status(401).json({message: 'Invalid Creds!'}); // 401: Unauthorized 
         return;
       } else {
-        const token = jwt.sign(
-          {email: row.Email, id: row.ID},
+        const token = jwt.sign( // creates a new jwt token "this is bhaskar"
+          {email: row.Email, id: row.ID},  // header(validity) payload(data/{email, id}) sign
           JWT_SECRET,
           {expiresIn: '30d'},
         );
@@ -141,7 +133,7 @@ app.post('/Sponsor/Login', async (req, res) => {
 
 app.post('/Sponsor/Register', async (req, res) => {
   const {email, password, username } = req.body;
-  const ID = crypto.randomUUID();
+  const ID = crypto.randomUUID(); // generate an ID for ID column
   try {
     const r = await runQuery('INSERT INTO Sponsor(ID) VALUES(?)', [ID]);
     if (r) {
@@ -181,9 +173,10 @@ app.post('/Organization/Register', async (req, res) => {
   }
 });
 
-app.put('/Update/Sponsor/Profile', authenticateToken, async (req, res) => {
+app.put('/Update/Sponsor/Profile', authenticateToken, async (req, res) => { // localhost:2007/Update/Sponsor/Profile 
   const { fullName, email, phone, whatsapp, designation, officialEmail } = req.body;
   const sql = 'UPDATE Sponsor SET FullName = ?, Email = ?, Phone = ?, Whatsapp = ?, Designation = ?, OfficialEmail = ? WHERE ID = ?';
+  // [ ID, null, null, null,... ] -> [ ID, bhaskar@gmail, Bhaskar Subhash, 8019829068, 8019829068,... ]
   try {
     const status = await runQuery(sql, [fullName, email, phone, whatsapp, designation, officialEmail, req.user.id]);
     if (status) res.status(200).json({message: 'Success'});
@@ -319,7 +312,7 @@ app.post('/Event/Create', authenticateToken, async (req, res) => {
   }
 });
 
-app.get('/Event/GetDetails/:id', authenticateToken, async (req, res) => {
+app.get('/Event/GetDetails/:id', authenticateToken, async (req, res) => { // localhost:2007/Event/GetDetails/gd88gew-37-8383vge
   try {
     const id = req.params.id;
     const sql = 'SELECT * FROM Events WHERE ID = ?';
@@ -348,6 +341,24 @@ app.get('/Event/getAllEvents', authenticateToken, async (req, res) => {
     res.status(200).json({message: 'Success!', rows});
   } catch (err) {
     res.status(500).json({message: 'Internal Failure!'});
+  }
+});
+
+app.get('/Admin/Login', (req, res) => {
+  try {
+    const sql = "SELECT * FROM User WHERE Email = ? AND UType = 'ADMIN' AND Password = ?";
+    const { email, password } = req.body;
+    const row = getRow(sql, [email, password]);
+    if (!row) {
+      res.status(401).json({message: 'Invalid Creds!'});
+    } else {
+      const token = jwt.sign(
+        { email, id: row.ID },
+        JWT_SECRET,
+        { expiresIn: '30d' }
+      );
+      res.status(200).json({message: 'Success!', token});
+    }
   }
 });
 
